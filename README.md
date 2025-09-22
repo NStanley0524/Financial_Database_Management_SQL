@@ -94,3 +94,121 @@ Given that the *transactions* table has 13M+ rows, naive queries would be slow. 
 - Ensured query filters and joins hit indexed columns.
 
 - Result: Queries that previously scanned millions of rows      dropped to millisecond responses.
+
+Ran the following query to check the execution time
+```sql
+explain analyze
+select * from transactions where card_id = 1807;
+```
+
+Explain Analyze before Indexing
+
+![image](./Screenshots/Query%20before%20optimization.png)
+
+
+Explain Analyze after Indexing
+
+![image](./Screenshots/Query%20after%20optimization.png)
+
+
+
+
+2. **Partitioning**
+- The transactions table was range-partitioned by year on transaction_date and indexed.
+
+- Advantage: queries restricted to specific years only scan relevant partitions, reducing I/O dramatically.
+
+- Added a default “future” partition to capture incoming data.
+
+Validated that partition works by inserting a new row below
+
+```sql
+
+insert into financial_system.transactions
+(transaction_id, transaction_date, client_id, card_id, amount, use_chip, merchant_city, merchant_state)
+values (999999, '2015-06-01', 123, 456, 200.0, 'Y', 'Lagos', 'NG');
+```
+
+Checking the partition it falls below
+
+```sql
+select tableoid::regclass as partition_name,*
+from financial_system.transactions
+where transaction_id = 999999;
+```
+
+Result:
+
+![image](./Screenshots/Partition%20verification%20result.png)
+
+
+Indexed the partitioned table
+
+```sql
+do $$
+declare
+    part RECORD;
+begin
+    for part in
+        select inhrelid::regclass as partition_name
+        from pg_inherits
+        where inhparent = 'financial_system.transactions'::regclass
+    loop
+        execute format('
+            create index if not exists %I_transaction_date_idx ON %s (transaction_date);
+            create index if not exists %I_client_id_idx ON %s (client_id);
+            create index if not exists %I_card_id_idx ON %s (card_id);
+            create index if not exists %I_merchant_city_idx ON %s (merchant_city);
+            create index if not exists %I_merchant_state_idx ON %s (merchant_state);
+        ',
+            part.partition_name, part.partition_name,
+            part.partition_name, part.partition_name,
+            part.partition_name, part.partition_name,
+            part.partition_name, part.partition_name,
+            part.partition_name, part.partition_name
+        );
+    end loop;
+end$$;
+
+```
+
+
+Validating the performance of the transaction table using this query below:
+
+```sql
+explain analyze
+select * from transactions
+where transaction_date between '2014-01-01' and '2014-07-20';
+```
+
+Results show SQL ONLY scanned transaction table of year 2014
+
+![image](./Screenshots/explain%20analyze2.png)
+
+
+
+
+3. **Materialized Views**
+- Built client_yearly_spending as a materialized view for quick reporting.
+
+- Aggregates millions of rows into precomputed yearly totals and averages per client.
+
+- Refreshable with a single command:
+```sql
+refresh materialized view client_yearly_spending;
+```
+
+
+
+## Stored Procedures, Views and Triggers (Automation and Intergrity)
+
+### Stored Procedures
+
+Designed for reusablilty and automation:
+
+- Monthly Spend per User: quickly retrieves a breakdown of spending per user across months.
+
+- Profile Summary: compiles user details, card limits, and aggregated transactions into a single report.
+
+- Card Usage Statistics: shows transaction counts and amounts per card, useful for both analytics and fraud detection.
+

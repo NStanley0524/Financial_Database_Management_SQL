@@ -53,7 +53,7 @@ client_id int references financial_system.users(id),
 card_id int references financial_system.cards(id),
 amount float,
 use_chip varchar(200),
-merchant_id int references financial_system.merchants(merchant_id),
+merchant_id int,
 merchant_city varchar(200),
 merchant_state varchar(50),
 zip varchar(200),
@@ -65,7 +65,7 @@ mcc int
 
 
 create table financial_system.fraud_labels(
-transaction_id int references financial_system.transactions(transaction_id),
+transaction_id int,
 fraud_label varchar(50)
 );
 
