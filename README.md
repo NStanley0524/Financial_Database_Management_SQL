@@ -58,7 +58,7 @@ The aim was not just to practice SQL queries, but to simulate a **real-world fin
 
 
 ## Who This Project is For
-- Fintech companies and payment processors (e.g., PayPal, Stripe, Paystack, Flutterwave, Interswitch,Moniepoint,FairMoney) looking to enforce business rules like fraud detection and credit-limit monitoring at the database level.
+- Fintech companies and payment processors (e.g., PayPal, Stripe, Paystack, Flutterwave, Interswitch, Moniepoint, FairMoney) looking to enforce business rules like fraud detection and credit-limit monitoring at the database level.
 
 - Banks and financial institutions that need to process millions of daily transactions securely and efficiently.
 
@@ -83,7 +83,12 @@ The following tools were used for the project
 
 
 ## Data Source and Processing
-The dataset for this project was gotten from [Kaggle](https://www.kaggle.com/datasets/computingvictor/transactions-fraud-datasets). The data came in a very messy state with mixed datatypes,inconsistent characters and missing values. Using **Python**...I
+The dataset for this project was gotten from [Kaggle](https://www.kaggle.com/datasets/computingvictor/transactions-fraud-datasets). The data came in a very messy state with mixed datatypes,inconsistent characters and missing values. 
+
+
+Using **Python**...I
+
+- Loaded the dirty dataset into **Jupyter Notebook**
 
 - Converted JSON label files into structured DataFrames.
 
@@ -105,9 +110,12 @@ The Full Database Schema can be seen [here](https://drive.google.com/file/d/1lqI
 
 The database schema includes five main tables:  
 - **users** – information about customers.  
-- **cards** – card details of customers.  
-- **merchants** – merchant profiles.  
-- **transactions** – ~13M rows of financial transactions.  
+- **cards** – card details of customers.
+   
+- **merchants** – merchant profiles.
+    
+- **transactions** – ~13M rows of financial transactions.
+  
 - **fraud_labels** – indicates fraudulent vs non-fraudulent activity. 
 
 For full table creation scripts...see [here](./Sql_scripts/create_table_script.sql).
@@ -214,7 +222,7 @@ select * from transactions
 where transaction_date between '2014-01-01' and '2014-07-20';
 ```
 
-Results show SQL ONLY scanned transaction table of year 2014
+Results show SQL ONLY scanned transaction table of year 2014 and not the entire dataset...Optimization fully accomplished.
 
 ![image](./Screenshots/explain%20analyze2.png)
 
