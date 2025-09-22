@@ -206,9 +206,115 @@ refresh materialized view client_yearly_spending;
 
 Designed for reusablilty and automation:
 
-- Monthly Spend per User: quickly retrieves a breakdown of spending per user across months.
+- **Monthly Spend per User**: quickly retrieves a breakdown of spending per user across months.
 
-- Profile Summary: compiles user details, card limits, and aggregated transactions into a single report.
+- **Profile Summary**: compiles user details, card limits, and aggregated transactions into a single report.
 
-- Card Usage Statistics: shows transaction counts and amounts per card, useful for both analytics and fraud detection.
+- **Card Usage Statistics**: shows transaction counts and amounts per card, useful for both analytics and fraud detection.
+
+
+Example of stored procedures created
+
+*Monthly spending summary per user*
+
+```sql
+create or replace procedure get_monthly_summary(p_user_id int)
+language plpgsql
+as $$
+declare
+rec record; -- declare variable
+begin
+	for rec in 
+		select date_trunc('month',t.transaction_date) as month,sum(t.amount) as total_spent
+		from transactions t where t.client_id = p_user_id
+		group by 1
+		order by 1	
+	loop
+		raise notice 'Month: %,Total spent: %',rec.month,rec.total_spent;
+	end loop;
+end;
+$$;
+```
+
+calling the stored procedure below
+
+```sql
+call get_monthly_summary(825);
+```
+
+
+### Triggers
+
+Used to perform an action whenever an event happens: 
+
+- **Fraud Detection Trigger**: whenever a new fraud label is inserted with “Yes,” the system automatically logs it in fraud_alert.
+
+- Ensures real-time fraud flagging.
+
+- **Credit Limit Trigger**: blocks any new transaction that would exceed a card’s limit.
+
+Enforces business rules at the database level, ensuring no inconsistent or invalid financial activity is recorded.
+
+
+Example trigger created
+
+```sql
+create or replace function raise_fraud_alert()
+returns trigger as $$
+begin
+if new.fraud_label = 'Yes' then
+insert into fraud_alert(transaction_id,alert_message)
+values(new.transaction_id,'Fraudulent Transaction Detected');
+end if;
+return new;
+end;
+$$ language plpgsql;
+```
+
+Validating that the trigger works by adding in a new fraudulent transaction 
+
+```sql
+insert into fraud_labels(transaction_id,fraud_label)
+values(419,'Yes');
+```
+
+Result can be seen below
+
+![image](./Screenshots/After%20fraud%20label%20detected.png)
+
+
+
+
+
+### Views
+
+Views make it easier for analysts to get summaries without repeating SQL
+
+- Fast access to all fraud-flagged events with key join context
+
+- Surfaces high-value activity instantly for finance, ops, and risk
+
+- Quick look at top customer segments by income for premium services or product strategy
+
+
+Example of view created
+
+```sql
+create or replace view fraud_transactions as
+select f.transaction_id,t.transaction_date,t.amount,t.card_id,u.id,u.address
+from fraud_labels f join transactions t
+on f.transaction_id = t.transaction_id
+join users u
+on t.client_id = u.id
+where fraud_label = 'Yes';
+```
+
+Calling the view
+```sql
+select * from fraud_transactions;
+```
+
+All SQL scripts for this lives [here](./Sql_scripts/stored%20procedures,%20triggers%20and%20views%20script.sql)
+
+
 
