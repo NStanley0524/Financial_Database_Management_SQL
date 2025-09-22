@@ -116,6 +116,9 @@ For full table creation scripts...see [here](./Sql_scripts/create_table_script.s
 
 ## Database Optimization
 
+The Full scripts can be seen [here](./Sql_scripts/optimization_script.sql)
+
+
 Given that the *transactions* table has 13M+ rows, naive queries would be slow. So i engineered the database for scale:
 
 ### Indexes
@@ -230,14 +233,14 @@ refresh materialized view client_yearly_spending;
 
 
 
-The Full scripts can be seen [here](./Sql_scripts/optimization_script.sql)
-
-
 
 
 
 
 ## Stored Procedures, Views and Triggers (Automation and Intergrity)
+
+All SQL scripts for this lives [here](./Sql_scripts/stored%20procedures,%20triggers%20and%20views%20script.sql)
+
 
 ### Stored Procedures
 
@@ -350,8 +353,6 @@ Calling the view
 ```sql
 select * from fraud_transactions;
 ```
-
-All SQL scripts for this lives [here](./Sql_scripts/stored%20procedures,%20triggers%20and%20views%20script.sql)
 
 
 
