@@ -2,6 +2,34 @@
 This repository contains a complete end-to-end SQL project built on a large financial transactions dataset. The project demonstrates advanced SQL database engineering concepts such as partitioning, indexing, stored procedures, triggers, materialized views, and business-focused reporting.
 
 
+
+
+
+## Table of Contents
+- [Financial_Database_Management_SQL](#financial_database_management_sql)
+- [Project Overview](#project-overview)
+- [Project Goals](#project-goals)
+- [Aim of Project](#aim-of-project)
+- [Who This Project is For](#who-this-project-is-for)
+- [Tools Used](#tools-used)
+- [Data Source and Processing](#data-source-and-processing)
+- [Database Design](#database-design)
+- [Database Optimization](#database-optimization)
+  - [Indexes](#indexes)
+  - [Partitioning](#partitioning)
+  - [Materialized Views](#materialized-views)
+- [Stored Procedures, Views and Triggers (Automation and Integrity)](#stored-procedures-views-and-triggers-automation-and-integrity)
+  - [Stored Procedures](#stored-procedures)
+  - [Triggers](#triggers)
+  - [Views](#views)
+- [Reporting & Analytics](#reporting--analytics)
+- [How to Run](#how-to-run)
+
+
+
+
+
+
 ## Project Overview
 The main objective of this project was to take a raw financial dataset and transform it into a high-performing, analytics-ready database. By implementing advanced SQL techniques, the project showcases how to design, optimize, and query a large dataset efficiently.  
 Key highlights include:  
@@ -90,7 +118,7 @@ For full table creation scripts...see [here](./Sql_scripts/create_table_script.s
 
 Given that the *transactions* table has 13M+ rows, naive queries would be slow. So i engineered the database for scale:
 
-1. **Indexes**
+### Indexes
 - Added indexes to transaction_date, card_id, client_id, merchant_id and columns that are frequently queries
 
 - Ensured query filters and joins hit indexed columns.
@@ -115,7 +143,7 @@ Explain Analyze after Indexing
 
 
 
-2. **Partitioning**
+### Partitioning
 - The transactions table was range-partitioned by year on transaction_date and indexed.
 
 - Advantage: queries restricted to specific years only scan relevant partitions, reducing I/O dramatically.
@@ -190,7 +218,7 @@ Results show SQL ONLY scanned transaction table of year 2014
 
 
 
-3. **Materialized Views**
+### Materialized Views
 - Built client_yearly_spending as a materialized view for quick reporting.
 
 - Aggregates millions of rows into precomputed yearly totals and averages per client.
@@ -202,7 +230,7 @@ refresh materialized view client_yearly_spending;
 
 
 
-The FUll scripts can be seen [here](./Sql_scripts/optimization_script.sql)
+The Full scripts can be seen [here](./Sql_scripts/optimization_script.sql)
 
 
 
@@ -245,7 +273,7 @@ end;
 $$;
 ```
 
-calling the stored procedure below
+Calling the stored procedure below
 
 ```sql
 call get_monthly_summary(825);
