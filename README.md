@@ -73,6 +73,8 @@ Attched [here](https://drive.google.com/drive/folders/1UIv-PtxxtwnV2Mi1n1c5PmWpA
 
 
 ## Database Design
+The Full Database Schema can be seen [here](https://drive.google.com/file/d/1lqI41mkA1SfjnYisOZIQ_zTt5LF5tytb/view?usp=sharing)
+
 The database schema includes five main tables:  
 - **users** – information about customers.  
 - **cards** – card details of customers.  
@@ -200,6 +202,13 @@ refresh materialized view client_yearly_spending;
 
 
 
+The FUll scripts can be seen [here](./Sql_scripts/optimization_script.sql)
+
+
+
+
+
+
 ## Stored Procedures, Views and Triggers (Automation and Intergrity)
 
 ### Stored Procedures
@@ -315,6 +324,81 @@ select * from fraud_transactions;
 ```
 
 All SQL scripts for this lives [here](./Sql_scripts/stored%20procedures,%20triggers%20and%20views%20script.sql)
+
+
+
+
+
+
+
+## Reporting & Analytics
+
+To make the dataset actionable, several queries and views were written:  
+
+- **Monthly transaction volume** (trend analysis). 
+
+```sql
+select extract('month' from transaction_date) as Month_number,to_char(transaction_date,'month') as Monthname,sum(amount)
+from transactions t
+group by Month_number,Monthname
+order by Month_number;
+```
+
+- **Fraudulent vs non-fraudulent transaction rates**.  
+
+```sql
+select Fraudulent,Non_fraudulent,(Fraudulent::decimal/nullif(Non_fraudulent,0)) * 100 as Percentage
+from
+(select
+count(case when fraud_label = 'Yes' then 1 end) as Fraudulent,
+count(case when fraud_label = 'No' then 1 end) as Non_fraudulent
+from fraud_labels);
+```
+
+- **Top fraud-prone merchant locations**. 
+
+```sql
+select t.merchant_city,t.merchant_state,count(*) as Fraudulent_transactions
+from transactions t join fraud_labels f
+on t.transaction_id = f.transaction_id
+where f.fraud_label = 'Yes'
+group by t.merchant_city,t.merchant_state
+order by Fraudulent_transactions desc;
+```
+
+
+
+
+
+
+## How to Run
+1. Clone the repository:  
+   ```bash
+   git clone https://github.com/NStanley0524/financial-sql-project.git
+   cd financial-sql-project
+   ```
+2. Ensure PostgreSQL 12+ is installed and running.
+
+3. Create a database schema in pgAdmin (e.g., financial_system).
+
+4. Run scripts in this order:
+
+        - 01_create_tables.sql
+
+        - 02_optimization.sql
+
+        - 03_procedures_triggers_views.sql
+
+        - 04_reporting_analytics.sql
+
+5. Load the cleaned dataset into the base tables.
+
+6. Refresh materialized views when needed:
+
+```sql
+refresh materialzed view client_yearly_spending;
+```
+
 
 
 
